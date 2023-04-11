@@ -7,6 +7,15 @@ import * as tourController from './../controllers/tourController';
  */
 const tourRouter = express.Router();
 
+/**
+ * ALIAS - instead of user need to fill in all the queries
+ * We predefine to them
+ * exec aliasTopTours before getAllTours
+ */
+tourRouter.route('/top-5-cheap').get(tourController.aliasTopTours, tourController.getAllTours);
+
+tourRouter.route('/tours-stats').get(tourController.getTourStats);
+
 tourRouter.route('/').get(tourController.getAllTours).post(tourController.createTour);
 
 tourRouter

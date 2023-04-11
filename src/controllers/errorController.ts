@@ -12,7 +12,17 @@ dotenv.config();
  * - message
  * - error it self
  * - stack
+ * https://buttercms.com/blog/express-js-error-handling/
  */
+
+// HANDLE ERROR FOR DB
+
+// TODO - to be define
+const handleValidationErrorDB = (err: AppError) => {
+  console.log('================================');
+  console.log(err);
+  return err;
+};
 
 const developmentError = (err: AppError, res: Response) => {
   console.log('ERROR', err);
@@ -27,7 +37,7 @@ const developmentError = (err: AppError, res: Response) => {
 const prodError = (err: AppError, res: Response) => {
   // operational error: send message to client about the error
   if (err.isOperational) {
-    res.status(+err.statusCode).json({
+    res.status(err.statusCode).json({
       status: err.status,
       message: err.message,
     });
@@ -41,12 +51,22 @@ const prodError = (err: AppError, res: Response) => {
 };
 
 export const globalErrorHandler = (err: AppError, req: Request, res: Response) => {
-  if (process.env.NODE_ENV === 'production') {
-    prodError(err, res);
-  }
+  err.statusCode = err.statusCode || 500;
+  err.status = err.status || 'error';
+
+  console.log('================================');
 
   if (process.env.NODE_ENV === 'development') {
     console.log('LOG DEVELOPMENT ERROR');
     developmentError(err, res);
+  }
+
+  if (process.env.NODE_ENV === 'production') {
+    console.log('PRODUCTION ERROR =============');
+    let error = { ...err };
+
+    error = handleValidationErrorDB(error);
+
+    prodError(error, res);
   }
 };

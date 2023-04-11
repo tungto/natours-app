@@ -1,25 +1,39 @@
 import { NextFunction, Request, Response } from 'express';
-import Tour from '../models/tourSchema';
+import Tour, { ITour } from '../models/tourSchema';
 import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
+import { APIFeatures, ReqQuery } from '../utils/apiFeatures';
 
 // GET ALL
-export const getAllTours = catchAsync(async (req: Request, res: Response) => {
-  const tours = await Tour.find({});
+export const getAllTours = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  // const tours = await Tour.find().sort({ name: 'desc' }).limit(3).skip(skip);
 
-  res.status(200).json({
-    status: 'success',
-    result: tours.length,
-    data: {
-      tours,
-    },
-  });
+  // Find method here will return a query => we can chained
+  // only AWAIT when added series of operation you want to do with the query
+  // because this method return a query so I will name is query
+  //https://mongoosejs.com/docs/tutorials/query_casting.html
+  const query: Promise<ITour[]> = Tour.find();
+
+  // TODO FIXED TYPE
+  const features = new APIFeatures(query, req.query as unknown as ReqQuery);
+
+  try {
+    const tours = await features.filter().sort().limitFields().paginate().query;
+
+    res.status(200).json({
+      status: 'success',
+      result: tours.length,
+      data: {
+        tours,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 // GET ONE
 export const getTour = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  console.log('================================================================');
-  console.log('===', req.params.id);
   let tour;
 
   /**
@@ -40,7 +54,6 @@ export const getTour = catchAsync(async (req: Request, res: Response, next: Next
      * handlers and middleware, we must past them to the next() function
      * where Express will catch and process them
      */
-    console.log('================================ DO WE GO IN HERE');
     return next(new AppError(`Tour not found`, 404));
   }
 
@@ -95,4 +108,59 @@ export const deleteTour = catchAsync(async (req: Request, res: Response, next: N
   }
 
   res.status(204).json({ status: 'success', data: null });
+});
+
+export const aliasTopTours = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  req.query.limit = '5';
+  req.query.sort = '-ratingsAverage,price';
+  req.query.fields = 'name,price,ratingsAverage,summary,difficulty';
+
+  next();
+});
+
+// rating > 4.5
+// sort avg price
+//
+export const getTourStats = catchAsync(async (req: Request, res: Response) => {
+  const stats = await Tour.aggregate([
+    {
+      $match: {
+        // get tours have rating > 4.9
+        ratingsAverage: { $gte: 4.5 },
+      },
+    },
+    {
+      $group: {
+        // _id: null,  // group all tours in one
+        _id: '$difficulty', // group by DIFFICULTY
+        // _id: '$price', // group by price,
+        // _id: '$ratingsAverage',
+        // CALCULATE BASE ON TOURS MATCH RATING AVG > 4.5
+        numTours: { $sum: 1 }, // We add 1 for each tour found
+        numRatings: { $sum: '$ratingsQuantity' },
+        avgRating: { $avg: '$ratingsAverage' },
+        avgPrice: { $avg: '$price' },
+        minPrice: { $min: '$price' },
+        maxPrice: { $max: '$price' },
+      },
+    },
+    {
+      $sort: {
+        avgPrice: 1,
+      },
+    },
+    {
+      // remove easy tour from stats
+      $match: {
+        _id: {
+          $ne: 'easy',
+        },
+      },
+    },
+  ]);
+
+  res.status(200).json({
+    status: 'success',
+    data: stats,
+  });
 });

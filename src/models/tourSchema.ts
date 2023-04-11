@@ -1,13 +1,14 @@
+import { Document } from 'mongodb';
 import mongoose, { Schema } from 'mongoose';
 // import validator from 'validator';
 
-export interface ITour {
+export interface ITour extends Document {
   name: string;
   price: number;
   [key: string]: unknown;
 }
 
-const TourSchema = new Schema<ITour>(
+const TourSchema: Schema = new Schema<ITour>(
   {
     name: {
       type: String,
@@ -80,6 +81,7 @@ const TourSchema = new Schema<ITour>(
     createdAt: {
       type: Date,
       default: Date.now(),
+      // hide this field from response
       select: false,
     },
 
