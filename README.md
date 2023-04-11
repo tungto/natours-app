@@ -1,12 +1,12 @@
 # Natours App
 
-[How to Setup a TypeScript + Node.js Project][https://gist.github.com/silver-xu/1dcceaa14c4f0253d9637d4811948437]
+[How to Setup a TypeScript + Node.js Project](https://gist.github.com/silver-xu/1dcceaa14c4f0253d9637d4811948437)
 
 # Express Notes
 
-## Routing
+## 1. Routing
 
-[Express Router][https://expressjs.com/en/guide/routing.html]
+[Express Router](https://expressjs.com/en/guide/routing.html)
 
 1. Using Router
 
@@ -18,10 +18,11 @@
 tourRouter.route('/top-5-cheap').get(tourController.aliasTopTours, tourController.getAllTours);
 ```
 
-## Error handing
+## 2. Error handing
 
-[Express Error Handling][https://buttercms.com/blog/express-js-error-handling/]
-[https://expressjs.com/en/guide/error-handling.html]
+[Express Error Handling](https://buttercms.com/blog/express-js-error-handling/)
+
+[Express Doc](https://expressjs.com/en/guide/error-handling.html)
 
 ### There are two types of error
 
@@ -33,4 +34,9 @@ tourRouter.route('/top-5-cheap').get(tourController.aliasTopTours, tourControlle
 
 # MONGODB - MONGOOSE
 
-1. [Mongoose Virtuals][https://mongoosejs.com/docs/tutorials/virtuals.html#mongoose-virtuals]
+1. [Mongoose Virtuals](https://mongoosejs.com/docs/tutorials/virtuals.html#mongoose-virtuals)
+
+2. [Aggregation](https://www.mongodb.com/docs/v6.0/meta/aggregation-quick-reference/)
+
+- $match
+- $group
