@@ -80,7 +80,6 @@ export class APIFeatures {
    * - config select in tourSchema
    */
   limitFields() {
-    console.log('to be define');
     if (this.queryString.fields) {
       const fields = this.queryString.fields.split(',').join(' ');
       this.query = this.query.select(fields);

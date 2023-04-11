@@ -51,7 +51,7 @@ export const getTour = catchAsync(async (req: Request, res: Response, next: Next
     /**
      * source: https://expressjs.com/en/guide/error-handling.html
      * For errors returned from async functions invoked by route
-     * handlers and middleware, we must past them to the next() function
+     * ! handlers and middleware, we must past them to the next() function
      * where Express will catch and process them
      */
     return next(new AppError(`Tour not found`, 404));
@@ -80,8 +80,7 @@ export const createTour = catchAsync(async (req: Request, res: Response) => {
 
 // UPDATE => findByIdAndUpdate
 export const updateTour = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  // TODO: why we need to return a new one not just the altered here?
-  // Run validator again? double check to make sure data is conform the schema?
+  // * Set new = true to return latest value
   const updatedTour = await Tour.findByIdAndUpdate(req.params.id, req.body, {
     new: true,
     runValidators: true,
@@ -162,5 +161,77 @@ export const getTourStats = catchAsync(async (req: Request, res: Response) => {
   res.status(200).json({
     status: 'success',
     data: stats,
+  });
+});
+
+/**
+ * In this route we want to return tours array with these fields
+ * numToursStart in the month of select year
+ * array of name of tours in that month
+ * month
+ */
+export const getMonthlyPlan = catchAsync(async (req: Request, res: Response) => {
+  const year = +req.params.year;
+
+  const tours = await Tour.aggregate([
+    /**
+     * Each tour have a array of startDates like below,
+     * to separate each tour by start date we use unwind
+     *
+     */
+
+    // [
+    //   "2021-07-19T03:00:00.000Z",
+    //   "2021-09-06T03:00:00.000Z",
+    //   "2022-03-18T03:00:00.000Z"
+    //   ]
+
+    { $unwind: { path: '$startDates' } },
+    {
+      $match: {
+        startDates: {
+          $gte: new Date(`${year}-01-01`),
+          $lte: new Date(`${year}-12-31`),
+        },
+      },
+    },
+    {
+      $group: {
+        _id: {
+          $month: '$startDates',
+        },
+        numTourStarts: { $sum: 1 },
+        tours: { $push: '$name' },
+      },
+    },
+
+    {
+      $addFields: {
+        month: '$_id',
+      },
+    },
+
+    {
+      // include and exclude fields: 1 show, 0 hide
+      $project: {
+        _id: 0,
+      },
+    },
+    {
+      $sort: {
+        numTourStarts: -1,
+      },
+    },
+
+    {
+      $limit: 6,
+    },
+  ]);
+
+  res.status(201).json({
+    status: 'success',
+    data: {
+      tours,
+    },
   });
 });
