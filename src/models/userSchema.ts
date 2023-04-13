@@ -35,14 +35,6 @@ const UserSchema = new mongoose.Schema({
 
 const User = mongoose.model('User', UserSchema);
 
-// User.schema.post('save', (err: MongoServerError, doc, next: NextFunction) => {
-//   if (err.name === 'MongoServerError' && err.code === 11000) {
-//     next(new AppError('There was a duplicate key error', 500));
-//   } else {
-//     next();
-//   }
-// });
-
 // DOCUMENT MIDDLEWARE
 // this refer to the document
 

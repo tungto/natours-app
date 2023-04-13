@@ -1,6 +1,7 @@
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { AppError } from '../utils/AppError';
 import * as dotenv from 'dotenv';
+import { MongoServerError } from 'mongodb';
 
 dotenv.config();
 
@@ -16,16 +17,30 @@ dotenv.config();
  */
 
 // HANDLE ERROR FOR DB
+const handleDuplicateError = (err: MongoServerError) => {
+  const value = err.errmsg?.match(/(["'])(\\?.)*?\1/)?.[0];
 
-// TODO - to be define
-const handleValidationErrorDB = (err: AppError) => {
-  console.log('================================');
-  console.log(err);
-  return err;
+  const message = `Duplicate field value: ${value}. Please use another value!`;
+
+  return new AppError(message, 400);
+};
+
+const handleValidationError = (err: MongoServerError) => {
+  // TODO fixed type
+  const errors = Object.values(err.errors)
+    .map((el: any) => el.message)
+    .join(' .');
+
+  return new AppError(errors, 400);
+};
+
+const handleCastError = (err: MongoServerError) => {
+  const message = `Invalid ${err.path}: ${err.value}`;
+  return new AppError(message, 400);
 };
 
 const developmentError = (err: AppError, res: Response) => {
-  console.log('ERROR', err);
+  console.log('DEVELOPMENT ERROR', err);
   res.status(err.statusCode).json({
     status: err.status,
     message: err.message,
@@ -34,15 +49,19 @@ const developmentError = (err: AppError, res: Response) => {
   });
 };
 
-const prodError = (err: AppError, res: Response) => {
-  // operational error: send message to client about the error
+const prodError = (err: AppError | MongoServerError, res: Response) => {
+  // operational, trusted error: send message to client about the error
   if (err.isOperational) {
     res.status(err.statusCode).json({
       status: err.status,
       message: err.message,
     });
   } else {
-    // Sends a generic message to the client about the error
+    // Programming or other unknown error: don't leak error details
+    // 1. Log the error
+    console.error('PRODUCTION ERROR', err);
+
+    // 2. Sends a generic message to the client about the error
     res.status(500).json({
       status: 'error',
       message: 'Something went wrong. Please try again!',
@@ -50,22 +69,47 @@ const prodError = (err: AppError, res: Response) => {
   }
 };
 
-export const globalErrorHandler = (err: AppError, req: Request, res: Response) => {
+/**
+ * For Development ENV, we just need to log and send all the errors
+ * For Production ENV, we need to treat programming/ untrusted
+ * and operational/ trusted error in different ways
+ * - operational/ trust error: send the error to client
+ * - programming/ unknown error: don't leak it,
+ * log the error and send generic message like - 'sth went wrong!'
+ */
+export const globalErrorHandler = (
+  err: AppError | MongoServerError,
+  req: Request,
+  res: Response,
+  _next: NextFunction,
+) => {
+  const DUPLICATED_ERROR_CODE = 11000;
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
 
-  console.log('================================');
-
   if (process.env.NODE_ENV === 'development') {
-    console.log('LOG DEVELOPMENT ERROR');
-    developmentError(err, res);
-  }
+    developmentError(err as AppError, res);
+  } else if (process.env.NODE_ENV === 'production') {
+    // ! NOT SURE WHY NAME DOESN'T INCLUDE WHEN CLONE THIS ERR
+    let error = Object.assign({ ...err, name: err.name }, err) as AppError | MongoServerError;
 
-  if (process.env.NODE_ENV === 'production') {
-    console.log('PRODUCTION ERROR =============');
-    let error = { ...err };
+    /**
+     * ! MONGODB ERROR DO NOT MARK AS OPERATIONAL ERROR
+     * SO WE NEED TO HANDLE IT IN HERE
+     */
 
-    error = handleValidationErrorDB(error);
+    // RETURN NEW ERROR ON CAST ERROR
+    if (error.name === 'CastError') {
+      error = handleCastError(error as MongoServerError);
+    }
+
+    if (error.name === 'ValidationError') {
+      error = handleValidationError(error as MongoServerError);
+    }
+
+    if ((error as MongoServerError).code === DUPLICATED_ERROR_CODE) {
+      error = handleDuplicateError(err as MongoServerError);
+    }
 
     prodError(error, res);
   }

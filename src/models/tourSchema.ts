@@ -1,15 +1,18 @@
 import { Document } from 'mongodb';
 import mongoose, { Schema } from 'mongoose';
+import slugify from 'slugify';
 // import validator from 'validator';
 
 export interface ITour extends Document {
   name: string;
   price: number;
+  start: number;
   [key: string]: unknown;
 }
 
 const TourSchema: Schema = new Schema<ITour>(
   {
+    start: Date,
     name: {
       type: String,
       required: [true, 'A tour must have a name'],
@@ -59,6 +62,7 @@ const TourSchema: Schema = new Schema<ITour>(
        */
       validate: {
         validator: function (this: ITour, val: number) {
+          // ! this validator not gonna work on update document
           return val < this.price;
         },
         message: 'Discount price ({VALUE}) should be below regular price',
@@ -106,6 +110,64 @@ const TourSchema: Schema = new Schema<ITour>(
     },
   },
 );
+
+TourSchema.virtual('durationsWeeks').get(function () {
+  // ! do not use arrow function here, THIS will be undefined
+  // console.log(' this.durations', this.duration);
+  return Math.round(this.duration / 7);
+});
+
+// *Document middleware: runs before .save() and .create()
+TourSchema.pre('save', function (next) {
+  // * THIS point to current DOCUMENT that being process
+
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
+
+//! IF WE HAVE MORE THAN 1 MIDDLE,
+//! SHOULD CALL NEXT() ON EACH, If not it will stuck
+TourSchema.pre('save', (next) => {
+  // console.log('Another document middleware');
+  next();
+});
+
+TourSchema.pre('find', function () {
+  // use this middleware to move only public tours
+  // ! This middleware only work for .find() query
+  // ! If we use .findById(), .findOne() => will not work
+
+  this.find({ secretTour: { $ne: true } });
+});
+
+// * SOLUTION
+TourSchema.pre(/^find/, function (next) {
+  this.find({ secretTour: { $ne: true } });
+
+  // console.log(this);
+  (this as unknown as ITour).start = Date.now();
+  next();
+});
+
+TourSchema.post(/^find/, function (docs, next) {
+  console.log(`Query took ${Date.now() - (this as unknown as ITour).start} milliseconds`);
+
+  // console.log(docs);
+  next();
+});
+
+// AGGREGATION MIDDLEWARE
+TourSchema.pre('aggregate', function (next) {
+  console.log('hello from aggregation middleware');
+  console.log(this.pipeline()); // log aggregation pipeline
+  this.pipeline().unshift({
+    $match: {
+      price: { $gte: 4.7 },
+      secretTour: { $ne: true },
+    },
+  });
+  next();
+});
 
 const Tour = mongoose.model('Tour', TourSchema);
 
