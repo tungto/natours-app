@@ -37,10 +37,15 @@ tourRouter.route('/top-5-cheap').get(tourController.aliasTopTours, tourControlle
 - custom error handler for dev env
 - custom error handler for prod env
 - handle 3 party error like MONGODB error: can mark as trusted/ operational error
-  -- validation error
-  -- casting error
-  -- duplicate document
-  -- tbd
+
+  - validation error
+  - casting error
+  - duplicate document
+
+- Global [unhandledRejection](https://nodejs.org/api/process.html#event-unhandledrejection)
+
+  - [should shutdown the server gracefully](https://www.dashlane.com/blog/implementing-nodejs-http-graceful-shutdown)
+  - Let It Crash: Best [Practices](https://blog.heroku.com/best-practices-nodejs-errors) for Handling Node.js Errors on Shutdown
 
 ### There are two types of error
 
