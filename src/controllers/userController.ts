@@ -19,20 +19,17 @@ export const getUser = catchAsync(async (req: Request, res: Response, next: Next
   });
 });
 
-// CREATE USER
-export const createUser = catchAsync(async (req: Request, res: Response) => {
-  // Need to check if the registered email existed
-  //   const exitedUser = User.findOne({ email: req.params.email });
+export const getAllUsers = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  const users = await User.find();
 
-  //   if (exitedUser) {
-  //   }
+  if (!users) {
+    next(new AppError(`User not found!`, 404));
+  }
 
-  const newUser = await User.create(req.body);
-
-  res.status(201).json({
+  res.status(200).json({
     status: 'success',
     data: {
-      user: newUser,
+      users,
     },
   });
 });

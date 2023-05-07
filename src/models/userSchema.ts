@@ -1,26 +1,49 @@
-import mongoose from 'mongoose';
-import isEmail from 'validator';
+import mongoose, { Model } from 'mongoose';
+import bcrypt from 'bcrypt';
 
-const UserSchema = new mongoose.Schema({
-  _id: { type: String, unique: true },
+export interface IUser {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string | undefined;
+  role?: string;
+  active?: boolean;
+  photo?: string;
+}
+
+export interface IUserDocument extends IUser, mongoose.Document {
+  setPassword: (password: string) => Promise<void>;
+  checkPassword: (inputPw: string, userPw: string) => Promise<boolean>;
+}
+
+interface IUserModel extends Model<IUserDocument> {
+  findByUsername: (username: string) => Promise<IUserDocument>;
+}
+
+export const UserSchema = new mongoose.Schema<IUserDocument, Model<IUserDocument>>({
   name: {
     type: String,
     required: true,
   },
+
   email: {
     type: String,
+    required: [true, 'Please provide your email'],
+    unique: true,
+    lowercase: true,
     // There are two ways for an promise-based async validator to fail:
     // 1. If the promise rejected => failed with given error
-    // 2. If the promise resolved to false => Mongoose create an error with the given message
-    validate: [isEmail, 'invalid email'],
+    // 2. If the promise resolved to false => Mongoose create an error
+    // validate: [isEmail, 'Please provide a valid email'],
   },
+
   role: {
     type: String,
   },
 
   active: {
     type: Boolean,
-    default: false,
+    default: true,
   },
   photo: {
     type: String,
@@ -28,20 +51,60 @@ const UserSchema = new mongoose.Schema({
 
   password: {
     type: String,
-    required: true,
+    required: [true, 'Please provide a password'],
+    minlength: 8,
     select: false,
+  },
+  // TODO FIX TS
+  confirmPassword: {
+    type: String,
+    required: [true, 'Please provide a confirm password'],
+    minlength: 8,
+    validate: {
+      validator: function (el: string): boolean {
+        // TODO FIX TS
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-expect-error
+        return this.password === el;
+      },
+      message: 'confirm password need to be same as your password',
+    },
   },
 });
 
-const User = mongoose.model('User', UserSchema);
+const saltRounds = 10;
 
 // DOCUMENT MIDDLEWARE
 // this refer to the document
+UserSchema.methods.checkPassword = async (inputPw: string, userPw: string) => {
+  return await bcrypt.compare(inputPw, userPw);
+};
+
+UserSchema.statics.findByUsername = function (username: string) {
+  return this.findOne({ username });
+};
 
 // MODEL MIDDLEWARE
+UserSchema.pre('save', async function () {
+  (this as unknown as IUser).password = await bcrypt.hash(
+    (this as unknown as IUser).password,
+    saltRounds,
+  );
+
+  // remove confirmPassword from response
+  this.confirmPassword = undefined;
+});
 
 // AGGREGATE MIDDLEWARE
 
 // QUERY MIDDLEWARE
+
+// JUST GET THE ACTIVE USERS
+UserSchema.pre(/^find/, function (next) {
+  this.find({ active: { $ne: false } });
+  next();
+});
+
+const User = mongoose.model<IUserDocument, IUserModel>('User', UserSchema);
 
 export default User;

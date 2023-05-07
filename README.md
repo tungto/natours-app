@@ -54,15 +54,16 @@ tourRouter.route('/top-5-cheap').get(tourController.aliasTopTours, tourControlle
 
 - On DEVELOPMENT ENVIRONMENT we just need to log the error and send response with: status, message, error, stack
 - On PRODUCTION ENVIRONMENT we treat the errors differently due to their types
-  -- If operational, trusted error => log the error then send it to client
-  -- If programming, unknown error => don't leak the details, log the error then send a generic message
+
+  - If operational, trusted error => log the error then send it to client
+  - If programming, unknown error => don't leak the details, log the error then send a generic message
 
 #### Handling Unhandled Routes
 
 - CUSTOM ERROR-HANDLING MIDDLEWARE NEED TO HAVE 4 ARGUMENTS: (err, req, res, next), If not, it won't fire
 - [Express error-handling middleware is not being called](https://stackoverflow.com/questions/29700005/express-4-middleware-error-handler-not-being-called)
 
-# MONGODB - MONGOOSE
+# MongoDB - Mongoose
 
 1. [Mongoose Virtuals](https://mongoosejs.com/docs/tutorials/virtuals.html#mongoose-virtuals)
 
@@ -79,11 +80,16 @@ TourSchema.virtual('durationsWeeks').get(function () {
 - $match
 - $group
 - [$unwind](https://www.mongodb.com/docs/manual/reference/operator/aggregation/unwind/)
-  -- Get the busiest month of a given year
-  -- How many tours start in each month of a given year.
-  -- check the getMonthlyPlan controller
+
+  - Get the busiest month of a given year
+  - How many tours start in each month of a given year.
+  - check the getMonthlyPlan controller
 
 3. [Middleware]
 
 - Document middleware: runs before .save() and .create()
 - Query middleware: runs before .find()
+
+## Authentication, Authorization and Security
+
+- [Example of](https://www.topcoder.com/thrive/articles/authentication-and-authorization-in-express-js-api-using-jwt) AUTHENTICATION AND AUTHORIZATION IN EXPRESS.JS API USING JWT

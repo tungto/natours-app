@@ -5,6 +5,7 @@ import tourRouter from './routes/tour.routes';
 import * as dotenv from 'dotenv';
 import { globalErrorHandler } from './controllers/errorController';
 import { AppError } from './utils/AppError';
+import userRouter from './routes/user.routes';
 dotenv.config();
 
 const app = express();
@@ -28,10 +29,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
+//3.ROUTES
 app.use('/api/v1/tours', tourRouter);
-app.use('/api/v1/users', (req, res) => {
-  res.send('hello');
-});
+app.use('/api/v1/users', userRouter);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
