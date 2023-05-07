@@ -5,15 +5,17 @@ export interface IUser {
   name: string;
   email: string;
   password: string;
-  confirmPassword: string | undefined;
+  confirmPassword: string;
   role?: string;
   active?: boolean;
   photo?: string;
+  passwordChangedAt: number;
 }
 
 export interface IUserDocument extends IUser, mongoose.Document {
   setPassword: (password: string) => Promise<void>;
   checkPassword: (inputPw: string, userPw: string) => Promise<boolean>;
+  changedPasswordAfter: (timestamp: number) => boolean;
 }
 
 interface IUserModel extends Model<IUserDocument> {
@@ -55,21 +57,18 @@ export const UserSchema = new mongoose.Schema<IUserDocument, Model<IUserDocument
     minlength: 8,
     select: false,
   },
-  // TODO FIX TS
   confirmPassword: {
     type: String,
     required: [true, 'Please provide a confirm password'],
     minlength: 8,
     validate: {
       validator: function (el: string): boolean {
-        // TODO FIX TS
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-expect-error
-        return this.password === el;
+        return (this as unknown as IUserDocument).password === el;
       },
       message: 'confirm password need to be same as your password',
     },
   },
+  passwordChangedAt: Date,
 });
 
 const saltRounds = 10;
@@ -78,6 +77,19 @@ const saltRounds = 10;
 // this refer to the document
 UserSchema.methods.checkPassword = async (inputPw: string, userPw: string) => {
   return await bcrypt.compare(inputPw, userPw);
+};
+
+UserSchema.methods.changedPasswordAfter = function (jwtTimestamp: number) {
+  if (this.passwordChangedAt) {
+    this.passwordChangedAt.getTime();
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10);
+
+    return jwtTimestamp < changedTimestamp;
+  }
+  return false;
 };
 
 UserSchema.statics.findByUsername = function (username: string) {
@@ -92,6 +104,8 @@ UserSchema.pre('save', async function () {
   );
 
   // remove confirmPassword from response
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
   this.confirmPassword = undefined;
 });
 

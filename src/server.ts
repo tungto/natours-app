@@ -28,10 +28,6 @@ const port = process.env.PORT || 3000;
 
 connectDB(ATLAS_URI as string);
 
-// mongoose.connection.once('open', () => {
-//   console.log('Connected to MongoDB');
-// });
-
 const server = app.listen(port, () => {
   console.log(`App running on  port ${port}`);
 });

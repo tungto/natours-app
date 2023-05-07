@@ -113,7 +113,6 @@ const TourSchema: Schema = new Schema<ITour>(
 
 TourSchema.virtual('durationsWeeks').get(function () {
   // ! do not use arrow function here, THIS will be undefined
-  // console.log(' this.durations', this.duration);
   return Math.round(this.duration / 7);
 });
 
@@ -128,7 +127,6 @@ TourSchema.pre('save', function (next) {
 //! IF WE HAVE MORE THAN 1 MIDDLE,
 //! SHOULD CALL NEXT() ON EACH, If not it will stuck
 TourSchema.pre('save', (next) => {
-  // console.log('Another document middleware');
   next();
 });
 
@@ -144,7 +142,6 @@ TourSchema.pre('find', function () {
 TourSchema.pre(/^find/, function (next) {
   this.find({ secretTour: { $ne: true } });
 
-  // console.log(this);
   (this as unknown as ITour).start = Date.now();
   next();
 });
@@ -152,14 +149,11 @@ TourSchema.pre(/^find/, function (next) {
 TourSchema.post(/^find/, function (docs, next) {
   console.log(`Query took ${Date.now() - (this as unknown as ITour).start} milliseconds`);
 
-  // console.log(docs);
   next();
 });
 
 // AGGREGATION MIDDLEWARE
 TourSchema.pre('aggregate', function (next) {
-  console.log('hello from aggregation middleware');
-  console.log(this.pipeline()); // log aggregation pipeline
   this.pipeline().unshift({
     $match: {
       price: { $gte: 4.7 },

@@ -1,7 +1,7 @@
-import { NextFunction, Request, Response } from 'express';
-import { AppError } from '../utils/AppError';
 import * as dotenv from 'dotenv';
+import { NextFunction, Request, Response } from 'express';
 import { MongoServerError } from 'mongodb';
+import { AppError } from '../utils/AppError';
 
 dotenv.config();
 
@@ -32,6 +32,16 @@ const handleValidationError = (err: MongoServerError) => {
     .join(' .');
 
   return new AppError(errors, 400);
+};
+
+const handleJsonWebTokenError = (_err: MongoServerError) => {
+  const message = 'Invalid token. Please login again!';
+  return new AppError(message, 401);
+};
+
+const handleTokenExpiredError = (_err: MongoServerError) => {
+  const message = 'Token expired. Please login again!';
+  return new AppError(message, 401);
 };
 
 const handleCastError = (err: MongoServerError) => {
@@ -81,7 +91,14 @@ export const globalErrorHandler = (
   err: AppError | MongoServerError,
   req: Request,
   res: Response,
-  _next: NextFunction,
+  /**
+   * ! CUSTOM ERROR-HANDLING MIDDLEWARE NEED TO HAVE 4 ARGUMENTS
+   * * (err, req, res, next), If not, it won't fire
+   * https://expressjs.com/en/guide/error-handling.html
+   * https://stackoverflow.com/questions/29700005/express-4-middleware-error-handler-not-being-called
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  next: NextFunction,
 ) => {
   const DUPLICATED_ERROR_CODE = 11000;
   err.statusCode = err.statusCode || 500;
@@ -109,6 +126,14 @@ export const globalErrorHandler = (
 
     if ((error as MongoServerError).code === DUPLICATED_ERROR_CODE) {
       error = handleDuplicateError(err as MongoServerError);
+    }
+
+    if (error.name === 'JsonWebTokenError') {
+      error = handleJsonWebTokenError(err as MongoServerError);
+    }
+
+    if (error.name === 'TokenExpiredError') {
+      error = handleTokenExpiredError(err as MongoServerError);
     }
 
     prodError(error, res);

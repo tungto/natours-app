@@ -33,7 +33,6 @@ export class APIFeatures {
    */
   filter() {
     const queryObj = { ...this.queryString };
-    // console.log(queryObj);
     const excludedFields = ['page', 'limit', 'fields', 'sort'];
     excludedFields.forEach((field) => delete queryObj?.[field]);
 
@@ -63,7 +62,6 @@ export class APIFeatures {
     if (this.queryString.sort) {
       // -price duration
       const sortBy = this.queryString.sort.split(',').join(' ');
-      console.log(sortBy);
       this.query = this.query.sort(sortBy);
     } else {
       // sort by created date by default
@@ -98,7 +96,6 @@ export class APIFeatures {
 
     if (this.queryString.page) {
       Tour.countDocuments().then((numTours) => {
-        console.log('SKIP', skip, numTours);
         // * Important we should check if the page > valid page
         if (skip >= numTours) {
           throw new Error('This page does not exist');

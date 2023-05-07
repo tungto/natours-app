@@ -1,5 +1,6 @@
 import express from 'express';
 import * as tourController from './../controllers/tourController';
+import * as authController from '../controllers/authController';
 
 /**
  * Router can use as middleware and for routing
@@ -18,7 +19,10 @@ tourRouter.route('/tours-stats').get(tourController.getTourStats);
 
 tourRouter.route('/monthly-plan/:year').get(tourController.getMonthlyPlan);
 
-tourRouter.route('/').get(tourController.getAllTours).post(tourController.createTour);
+tourRouter
+  .route('/')
+  .get(authController.protectRoute, tourController.getAllTours)
+  .post(tourController.createTour);
 
 tourRouter
   .route('/:id')

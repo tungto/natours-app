@@ -93,3 +93,17 @@ TourSchema.virtual('durationsWeeks').get(function () {
 ## Authentication, Authorization and Security
 
 - [Example of](https://www.topcoder.com/thrive/articles/authentication-and-authorization-in-express-js-api-using-jwt) AUTHENTICATION AND AUTHORIZATION IN EXPRESS.JS API USING JWT
+
+1. Sign Up
+2. Login
+3. Protecting Routes
+
+- Get token and check if it's there
+- Verify the token
+  - Error Handling
+    - Expire token - handleJsonWebTokenError
+    - Invalid token - handleJsonWebTokenError
+- Check is user is still exists
+- Check if the token issued after user change password
+  - Add timestamp on changePasswordAfter
+  - Compare token iat with change password time added above
