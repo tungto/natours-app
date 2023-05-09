@@ -41,6 +41,8 @@ export const UserSchema = new mongoose.Schema<IUserDocument, Model<IUserDocument
 
   role: {
     type: String,
+    enum: ['user', 'guide', 'lead-guide', 'admin'],
+    default: 'user',
   },
 
   active: {

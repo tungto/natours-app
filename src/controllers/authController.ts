@@ -50,6 +50,7 @@ export const signUp = catchAsync(async (req: Request, res: Response) => {
     password: req.body.password,
     confirmPassword: req.body.password,
     passwordChangedAt: req.body.passwordChangedAt,
+    role: req.body.role,
   });
 
   createSendToken(newUser as IUserDocument, 201, res);
@@ -124,3 +125,15 @@ export const protectRoute = catchAsync(
     next();
   },
 );
+
+export const restrictTo = (...roles: string[]) => {
+  return (req: IGetUserAuthInfoRequest, res: Response, next: NextFunction) => {
+    /// roles ['admin', 'lead-guide']
+
+    if (!roles.includes(req.user.role)) {
+      return next(new AppError('You do not have permission to perform this action', 403));
+    }
+
+    next();
+  };
+};

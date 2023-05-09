@@ -94,9 +94,11 @@ TourSchema.virtual('durationsWeeks').get(function () {
 
 - [Example of](https://www.topcoder.com/thrive/articles/authentication-and-authorization-in-express-js-api-using-jwt) AUTHENTICATION AND AUTHORIZATION IN EXPRESS.JS API USING JWT
 
-1. Sign Up
-2. Login
-3. Protecting Routes
+### Sign Up
+
+### Login
+
+### Protecting Routes
 
 - Get token and check if it's there
 - Verify the token
@@ -107,3 +109,19 @@ TourSchema.virtual('durationsWeeks').get(function () {
 - Check if the token issued after user change password
   - Add timestamp on changePasswordAfter
   - Compare token iat with change password time added above
+
+### Roles and Permissions
+
+#### Sources
+
+- [Role-based access control](https://en.wikipedia.org/wiki/Role-based_access_control)
+- [Implementing Role-Based Access Control (RBAC) in Node.js Express](https://tuan200tokyo.blogspot.com/2023/04/blog206-implementing-role-based-access.html)
+
+#### Steps
+
+1. Specific roles of user model: _user, admin, guide, lead-guide_
+2. Add restrictTo to Tour Routes
+
+- Case
+  - User roles: _admin, guide-lead_ have permission to delete tour
+  - Other user get error: _You do not have permission to perform this action_
