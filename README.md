@@ -13,6 +13,7 @@
 ## 1. Routing
 
 [Express Router](https://expressjs.com/en/guide/routing.html)
+[next() function](https://reflectoring.io/express-middleware/#understanding-the-next-function)
 
 1. Using Router
 
@@ -63,7 +64,7 @@ tourRouter.route('/top-5-cheap').get(tourController.aliasTopTours, tourControlle
 - CUSTOM ERROR-HANDLING MIDDLEWARE NEED TO HAVE 4 ARGUMENTS: (err, req, res, next), If not, it won't fire
 - [Express error-handling middleware is not being called](https://stackoverflow.com/questions/29700005/express-4-middleware-error-handler-not-being-called)
 
-# MongoDB - Mongoose
+## 3. MongoDB - Mongoose
 
 1. [Mongoose Virtuals](https://mongoosejs.com/docs/tutorials/virtuals.html#mongoose-virtuals)
 
@@ -90,7 +91,7 @@ TourSchema.virtual('durationsWeeks').get(function () {
 - Document middleware: runs before .save() and .create()
 - Query middleware: runs before .find()
 
-## Authentication, Authorization and Security
+## 4. Authentication, Authorization and Security
 
 - [Example of](https://www.topcoder.com/thrive/articles/authentication-and-authorization-in-express-js-api-using-jwt) AUTHENTICATION AND AUTHORIZATION IN EXPRESS.JS API USING JWT
 
@@ -125,3 +126,33 @@ TourSchema.virtual('durationsWeeks').get(function () {
 - Case
   - User roles: _admin, guide-lead_ have permission to delete tour
   - Other user get error: _You do not have permission to perform this action_
+
+### Reset and Forgot password
+
+#### Sources
+
+- [Implementing Secure Password Reset Functionality in Node.js Express](https://viblo.asia/p/blog220-implementing-secure-password-reset-functionality-in-nodejs-express-obA463mBJKv)
+
+#### Steps
+
+1. /forgotPassword
+
+- Find user base on email
+  - If user not found => send an error
+- create random resetToken
+- set user.passwordResetToken with hashed resetToken above, user.passwordResetExpires
+- save the user - user.save() => _User save here to also run the VALIDATOR in the schema which user.update() doesn't_
+
+2. Send Emails with Nodemailer
+
+- If failed => remove user fields: passwordResetToken, passwordResetExpires
+- URL: /api/v1/users/resetPassword/:token _Origin token, not the hashed one_
+- Patch request to modify the resetPasswordToken
+
+3. Set new password
+
+- Get the origin resetToken from req params
+- Find User base on the hashed resetToken
+- Set password, passwordConfirm from req body
+- Remove passwordResetToken, passwordResetExpires
+- save user - _user.save()_ instead of _user.update()_ to run the validators

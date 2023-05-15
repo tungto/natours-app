@@ -3,6 +3,8 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 import User, { IUserDocument } from '../models/userSchema';
 import { AppError } from '../utils/AppError';
 import { catchAsync } from '../utils/catchAsync';
+import { sendEmail } from '../utils/email';
+import crypto from 'crypto';
 
 // TODO refactor this type
 export interface IGetUserAuthInfoRequest extends Request {
@@ -48,7 +50,7 @@ export const signUp = catchAsync(async (req: Request, res: Response) => {
     name: req.body.name,
     email: req.body.email,
     password: req.body.password,
-    confirmPassword: req.body.password,
+    passwordConfirm: req.body.password,
     passwordChangedAt: req.body.passwordChangedAt,
     role: req.body.role,
   });
@@ -58,6 +60,7 @@ export const signUp = catchAsync(async (req: Request, res: Response) => {
 
 // LOGIN
 export const login = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  console.log('LOGIN: 🎃');
   const { email, password } = req.body;
 
   //1. Check if email for password is exist
@@ -73,6 +76,7 @@ export const login = catchAsync(async (req: Request, res: Response, next: NextFu
 
   // 2. If user existed =>  Check if password is correct
   const match = await user?.checkPassword(req.body.password, user.password);
+
   if (!user || !match) {
     return next(new AppError('Incorrect email or password', 401));
   }
@@ -88,6 +92,8 @@ export const login = catchAsync(async (req: Request, res: Response, next: NextFu
 
 export const protectRoute = catchAsync(
   async (req: IGetUserAuthInfoRequest, res: Response, next: NextFunction) => {
+    console.log('PROTECT ROUTE 👏');
+
     //1. Get token ad check of it's there
     let token = '';
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
@@ -103,14 +109,13 @@ export const protectRoute = catchAsync(
 
     //3. Check if user is still exists
     const freshUser = await User.findOne({ _id: (decoded as JwtPayload).id });
-    console.log(decoded);
-    console.log(freshUser);
 
     if (!freshUser) {
       return next(new AppError('The user belonging to this token no longer exist.', 401));
     }
 
     //4. Check if user changed password after the token issued
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (freshUser.changedPasswordAfter((decoded as JwtPayload).iat!)) {
       return next(new AppError('The user recently changed password! Please login again.', 401));
     }
@@ -137,3 +142,95 @@ export const restrictTo = (...roles: string[]) => {
     next();
   };
 };
+
+export const forgotPassword = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    console.log('FORGOT PASSWORD 👻');
+    //1. get user base on email/username
+    const user = await User.findOne({ email: req.body.email });
+
+    if (!user) {
+      return next(new AppError('There is no user with email address', 404));
+    }
+
+    //2. send validate through email => send link to reset password
+    const resetToken = user.createPwResetToken();
+
+    await user.save({ validateBeforeSave: false });
+
+    //3. validate pw => update pw
+    // here we send the origin reset token, not the encrypted one
+    const resetURL = `${req.protocol}://${req.get(
+      'host',
+    )}/api/v1/users/resetPassword/${resetToken}`;
+
+    const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL} .\If you didn't forget your password please ignore this email`;
+
+    try {
+      // send to email
+      await sendEmail({
+        email: user.email,
+        message,
+        subject: 'Your password reset token (valid for 10 minutes)',
+      });
+
+      res.status(200).json({
+        status: 'success',
+        message: 'Token sent to email!',
+      });
+    } catch (error) {
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+
+      await user.save({ validateBeforeSave: false });
+
+      return next(new AppError('There was an error sending the email. Try again latter!', 500));
+    }
+  },
+);
+
+/**
+ *
+ */
+export const resetPassword = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  console.log('RESET PASSWORD 🫡');
+
+  // 1. Get user base on token
+  const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new AppError('Token invalid or has expired', 400));
+  }
+
+  // 2. If token has not expired, and there is user, set the new password
+  user.password = req.body.password;
+  user.passwordConfirm = req.body.passwordConfirm;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+
+  //* Saving user data might slower than token issuing in step 4
+  // User.findByIdAndUpdate will NOT work as intended!
+  await user.save();
+
+  // 3. Update the changePasswordAt property for the user
+  // Added in userSchema
+
+  // 4. Log the user in
+  // ! token might be created a bit before the passwordChangedAt save
+  const token = signToken(user._id);
+
+  // 5. If token has expired => send the fail response
+  res.status(200).json({
+    message: 'success',
+    token,
+  });
+
+  // ! Note about next() function -
+  // https://reflectoring.io/express-middleware/#understanding-the-next-function
+  // next();
+});

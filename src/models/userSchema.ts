@@ -1,21 +1,25 @@
 import mongoose, { Model } from 'mongoose';
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 export interface IUser {
   name: string;
   email: string;
   password: string;
-  confirmPassword: string;
+  passwordConfirm: string;
   role?: string;
   active?: boolean;
   photo?: string;
-  passwordChangedAt: number;
+  passwordChangedAt?: number;
+  passwordResetToken?: string | undefined;
+  passwordResetExpires?: number;
 }
 
 export interface IUserDocument extends IUser, mongoose.Document {
   setPassword: (password: string) => Promise<void>;
   checkPassword: (inputPw: string, userPw: string) => Promise<boolean>;
   changedPasswordAfter: (timestamp: number) => boolean;
+  createPwResetToken: () => string;
 }
 
 interface IUserModel extends Model<IUserDocument> {
@@ -59,11 +63,12 @@ export const UserSchema = new mongoose.Schema<IUserDocument, Model<IUserDocument
     minlength: 8,
     select: false,
   },
-  confirmPassword: {
+  passwordConfirm: {
     type: String,
     required: [true, 'Please provide a confirm password'],
     minlength: 8,
     validate: {
+      // ! this validator not gonna work on update document
       validator: function (el: string): boolean {
         return (this as unknown as IUserDocument).password === el;
       },
@@ -71,6 +76,8 @@ export const UserSchema = new mongoose.Schema<IUserDocument, Model<IUserDocument
     },
   },
   passwordChangedAt: Date,
+  passwordResetToken: String,
+  passwordResetExpires: Date,
 });
 
 const saltRounds = 10;
@@ -81,6 +88,12 @@ UserSchema.methods.checkPassword = async (inputPw: string, userPw: string) => {
   return await bcrypt.compare(inputPw, userPw);
 };
 
+/**
+ * JWT issue token with iat
+ * if that iat > passwordChangedAt => token invalid
+ * @param jwtTimestamp
+ * @returns
+ */
 UserSchema.methods.changedPasswordAfter = function (jwtTimestamp: number) {
   if (this.passwordChangedAt) {
     this.passwordChangedAt.getTime();
@@ -94,26 +107,45 @@ UserSchema.methods.changedPasswordAfter = function (jwtTimestamp: number) {
   return false;
 };
 
+// Since the reset token only use for User type so add it as a method
+UserSchema.methods.createPwResetToken = function () {
+  // Always save sensitive data in encrypted
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  this.passwordResetToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+  // send origin token
+  return resetToken;
+};
+
 UserSchema.statics.findByUsername = function (username: string) {
   return this.findOne({ username });
 };
 
 // MODEL MIDDLEWARE
-UserSchema.pre('save', async function () {
+UserSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+
   (this as unknown as IUser).password = await bcrypt.hash(
     (this as unknown as IUser).password,
     saltRounds,
   );
 
-  // remove confirmPassword from response
+  // remove passwordConfirm from response
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
-  this.confirmPassword = undefined;
+  this.passwordConfirm = undefined;
+
+  next();
 });
 
-// AGGREGATE MIDDLEWARE
+UserSchema.pre('save', function (next) {
+  if (!this.isModified('password') || this.isNew) return next();
 
-// QUERY MIDDLEWARE
+  // Set passwordChangedAt back 1 second in the past as saving data to database slower than issuing the JWT token
+  this.passwordChangedAt = Date.now() - 1000;
+  next();
+});
 
 // JUST GET THE ACTIVE USERS
 UserSchema.pre(/^find/, function (next) {
