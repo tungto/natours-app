@@ -10,7 +10,10 @@ userRouter.route('/login').post(authController.login);
 userRouter.route('/forgotPassword').post(authController.forgotPassword);
 userRouter.route('/resetPassword/:token').patch(authController.resetPassword);
 
+userRouter.route('/:id').get(authController.protectRoute, userController.getUser);
+userRouter
+  .route('/updatePassword')
+  .patch(authController.protectRoute, authController.updatePassword);
 userRouter.route('/').get(userController.getAllUsers);
-userRouter.route('/:id').get(userController.getUser);
 
 export default userRouter;

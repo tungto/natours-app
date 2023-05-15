@@ -156,3 +156,11 @@ TourSchema.virtual('durationsWeeks').get(function () {
 - Set password, passwordConfirm from req body
 - Remove passwordResetToken, passwordResetExpires
 - save user - _user.save()_ instead of _user.update()_ to run the validators
+
+4. Update Current User
+
+- endpoint: /updatePassword
+- this route should be a protected route
+- get user from collection
+- check if input password match with current password
+- if match, update password and log user in, send jwt token

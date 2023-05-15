@@ -1,13 +1,13 @@
-import mongoose, { Model } from 'mongoose';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
+import mongoose, { Model } from 'mongoose';
 
 export interface IUser {
   name: string;
   email: string;
   password: string;
   passwordConfirm: string;
-  role?: string;
+  role: string;
   active?: boolean;
   photo?: string;
   passwordChangedAt?: number;
@@ -85,7 +85,11 @@ const saltRounds = 10;
 // DOCUMENT MIDDLEWARE
 // this refer to the document
 UserSchema.methods.checkPassword = async (inputPw: string, userPw: string) => {
-  return await bcrypt.compare(inputPw, userPw);
+  try {
+    return await bcrypt.compare(inputPw, userPw);
+  } catch (error) {
+    console.log('ERROR CHECK PASSWORD', error);
+  }
 };
 
 /**
@@ -126,12 +130,13 @@ UserSchema.statics.findByUsername = function (username: string) {
 UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
 
+  // !ALWAY ENCRYPT SENSITIVE DATA BEFORE SAVE TO DATABASE
   (this as unknown as IUser).password = await bcrypt.hash(
     (this as unknown as IUser).password,
     saltRounds,
   );
 
-  // remove passwordConfirm from response
+  // *remove passwordConfirm from response
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-expect-error
   this.passwordConfirm = undefined;
@@ -142,7 +147,7 @@ UserSchema.pre('save', async function (next) {
 UserSchema.pre('save', function (next) {
   if (!this.isModified('password') || this.isNew) return next();
 
-  // Set passwordChangedAt back 1 second in the past as saving data to database slower than issuing the JWT token
+  // *Set passwordChangedAt back 1 second in the past as saving data to database slower than issuing the JWT token
   this.passwordChangedAt = Date.now() - 1000;
   next();
 });

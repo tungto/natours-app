@@ -1,14 +1,14 @@
-import { CookieOptions, NextFunction, Request, Response } from 'express';
+import crypto from 'crypto';
+import { NextFunction, Request, Response } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import User, { IUserDocument } from '../models/userSchema';
 import { AppError } from '../utils/AppError';
 import { catchAsync } from '../utils/catchAsync';
 import { sendEmail } from '../utils/email';
-import crypto from 'crypto';
 
 // TODO refactor this type
 export interface IGetUserAuthInfoRequest extends Request {
-  user?: any;
+  user?: IUserDocument;
 }
 
 const signToken = (id: string) => {
@@ -19,14 +19,6 @@ const signToken = (id: string) => {
 
 const createSendToken = (user: IUserDocument, statusCode: number, res: Response) => {
   const token = signToken(user._id);
-  const cookieOptions: CookieOptions = {
-    expires: new Date(
-      Date.now() + (process.env.JWT_COOKIE_EXPIRES_IN as unknown as number) * 24 * 60 * 60 * 1000,
-    ),
-    httpOnly: true,
-  };
-
-  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
 
   // remove password from response
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -81,13 +73,12 @@ export const login = catchAsync(async (req: Request, res: Response, next: NextFu
     return next(new AppError('Incorrect email or password', 401));
   }
 
-  // 3. If User existed send token
-  if (user) {
-    res.status(200).json({
-      status: 'success',
-      token: signToken(user._id),
-    });
+  if (!user) {
+    return next(new AppError('User does not exist', 404));
   }
+
+  // 3. If User existed send token
+  createSendToken(user, 200, res);
 });
 
 export const protectRoute = catchAsync(
@@ -132,10 +123,11 @@ export const protectRoute = catchAsync(
 );
 
 export const restrictTo = (...roles: string[]) => {
+  console.log('RESTRICT TO 🤝');
   return (req: IGetUserAuthInfoRequest, res: Response, next: NextFunction) => {
     /// roles ['admin', 'lead-guide']
 
-    if (!roles.includes(req.user.role)) {
+    if (!roles.includes(req.user?.role as string)) {
       return next(new AppError('You do not have permission to perform this action', 403));
     }
 
@@ -222,15 +214,49 @@ export const resetPassword = catchAsync(async (req: Request, res: Response, next
 
   // 4. Log the user in
   // ! token might be created a bit before the passwordChangedAt save
-  const token = signToken(user._id);
-
-  // 5. If token has expired => send the fail response
-  res.status(200).json({
-    message: 'success',
-    token,
-  });
+  createSendToken(user, 200, res);
 
   // ! Note about next() function -
   // https://reflectoring.io/express-middleware/#understanding-the-next-function
   // next();
 });
+
+export const updatePassword = catchAsync(
+  async (req: IGetUserAuthInfoRequest, res: Response, next: NextFunction) => {
+    console.log('UPDATE PASSWORD 🤖');
+    const { currentPassword, newPassword, newPasswordConfirm } = req.body;
+
+    if (!currentPassword || !newPasswordConfirm || !newPassword) {
+      return next(new AppError('Invalid password or password confirmation', 400));
+    }
+    //1. Get user from collection
+
+    const currentUser: IUserDocument | null = await User.findOne({ _id: req.user?._id }).select(
+      '+password',
+    );
+
+    //2. Check if Posted password is correct
+    const match = await currentUser?.checkPassword(
+      currentPassword,
+      currentUser?.password as string,
+    );
+
+    if (!match) {
+      return next(new AppError('Password is not correct.', 400));
+    }
+
+    if (currentPassword === newPassword) {
+      return next(new AppError('New password should be different than the old one.', 400));
+    }
+
+    //3. If correct, update password
+    (currentUser as IUserDocument).password = newPassword;
+    (currentUser as IUserDocument).passwordConfirm = newPasswordConfirm;
+
+    // save the current user instead of User.findByIdAndUpdate  run run validators and pre-save middleware
+    await currentUser?.save();
+
+    //4. Log uer in, send JWT token
+    createSendToken(currentUser as IUserDocument, 200, res);
+  },
+);

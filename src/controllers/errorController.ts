@@ -34,11 +34,13 @@ const handleValidationError = (err: MongoServerError) => {
   return new AppError(errors, 400);
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleJsonWebTokenError = (_err: MongoServerError) => {
   const message = 'Invalid token. Please login again!';
   return new AppError(message, 401);
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const handleTokenExpiredError = (_err: MongoServerError) => {
   const message = 'Token expired. Please login again!';
   return new AppError(message, 401);
