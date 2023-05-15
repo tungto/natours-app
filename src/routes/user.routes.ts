@@ -14,6 +14,9 @@ userRouter.route('/:id').get(authController.protectRoute, userController.getUser
 userRouter
   .route('/updatePassword')
   .patch(authController.protectRoute, authController.updatePassword);
+
+userRouter.route('/updateMe').patch(authController.protectRoute, userController.updateMe);
+
 userRouter.route('/').get(userController.getAllUsers);
 
 export default userRouter;

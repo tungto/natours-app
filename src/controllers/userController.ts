@@ -2,6 +2,18 @@ import { NextFunction, Request, Response } from 'express';
 import User from '../models/userSchema';
 import { catchAsync } from '../utils/catchAsync';
 import { AppError } from '../utils/AppError';
+import { IGetUserAuthInfoRequest } from './authController';
+
+// todo update types
+// Only update allowed fields, remove fields not-allowed like role...
+const filterObj = (data: any, allowedFields: string[]) => {
+  const finalObj: any = {};
+  allowedFields.forEach((key) => {
+    finalObj[key] = data[key];
+  });
+
+  return finalObj;
+};
 
 // GET USER
 export const getUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
@@ -70,20 +82,30 @@ export const deleteUser = catchAsync(async (req: Request, res: Response, next: N
   });
 });
 
-export const updateMe = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  console.log('UPDATE USER - ME 🫶');
-  const user = await User.findByIdAndDelete(req.params.id);
+export const updateMe = catchAsync(
+  async (req: IGetUserAuthInfoRequest, res: Response, next: NextFunction) => {
+    console.log('UPDATE USER - ME 🫶');
+    // filter change password route
+    if (req.body.password || req.body.confirmPassword) {
+      return next(
+        new AppError('This route is not for password update. Please use /updateMe.', 400),
+      );
+    }
 
-  if (!req.body.password || !req.body.passwordConfirm) {
-    return next(new AppError('Please provide password and confirm password.', 400));
-  }
+    const updateObj = filterObj(req.body, ['email', 'name']);
 
-  if (!user) {
-    next(new AppError(`User not found!`, 404));
-  }
+    console.log('updateObj', updateObj);
 
-  res.status(200).json({
-    status: 'success',
-    data: null,
-  });
-});
+    // !For non-sensitive data we can use findByIdAndUpdate
+    const updatedUser = await User.findByIdAndUpdate(req.user?._id, updateObj, {
+      // return updated one
+      new: true,
+      runValidators: true,
+    });
+
+    res.status(200).json({
+      status: 'success',
+      data: updatedUser,
+    });
+  },
+);
