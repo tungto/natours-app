@@ -67,20 +67,26 @@ export const updateUser = catchAsync(async (req: Request, res: Response, next: N
   });
 });
 
-// DELETE USER
-export const deleteUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
-  console.log('DELETE USER 🤌');
-  const user = await User.findByIdAndDelete(req.params.id);
+// DELETE USER - Just set active status to false, don't remove user data from DB
+export const deleteMe = catchAsync(
+  async (req: IGetUserAuthInfoRequest, res: Response, next: NextFunction) => {
+    console.log('DELETE USER 🤌');
+    const deletedUser = await User.findByIdAndUpdate(
+      req.user?.id,
+      { active: false },
+      { new: true },
+    );
 
-  if (!user) {
-    next(new AppError(`User not found!`, 404));
-  }
+    if (!deletedUser) {
+      next(new AppError(`Token invalid, please login again!`, 400));
+    }
 
-  res.status(200).json({
-    status: 'success',
-    data: null,
-  });
-});
+    res.status(200).json({
+      status: 'success',
+      data: deletedUser,
+    });
+  },
+);
 
 export const updateMe = catchAsync(
   async (req: IGetUserAuthInfoRequest, res: Response, next: NextFunction) => {
@@ -93,8 +99,6 @@ export const updateMe = catchAsync(
     }
 
     const updateObj = filterObj(req.body, ['email', 'name']);
-
-    console.log('updateObj', updateObj);
 
     // !For non-sensitive data we can use findByIdAndUpdate
     const updatedUser = await User.findByIdAndUpdate(req.user?._id, updateObj, {
