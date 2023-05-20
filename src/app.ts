@@ -9,6 +9,9 @@ import userRouter from './routes/user.routes';
 import cookieParser from 'cookie-parser';
 import { rateLimit } from 'express-rate-limit';
 import helmet from 'helmet';
+import mongoSanitize from 'express-mongo-sanitize';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const xss = require('xss-clean');
 dotenv.config();
 
 const app = express();
@@ -28,6 +31,12 @@ if (process.env.NODE_ENV === 'development') {
 app.use(express.json({ limit: '10kb' }));
 // setup static folder
 app.use(express.static(`${__dirname}/public`));
+
+// Data sanitization against NoSQL query injection
+app.use(mongoSanitize());
+
+// Data sanitization against XSS
+app.use(xss());
 
 // Test Middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
