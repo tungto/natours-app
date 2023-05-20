@@ -172,7 +172,7 @@ TourSchema.virtual('durationsWeeks').get(function () {
 
 7. To do
 
-- Implement rate limiting (express-rate-limit)
+- [Implement rate limiting](https://viblo.asia/p/rate-time-limit-trong-nodejs-vyDZOnkRKwj)
 - Implement maximum login attempts
 
 ### Security Best Practices
@@ -192,7 +192,7 @@ TourSchema.virtual('durationsWeeks').get(function () {
 
 - Store JWT in HTTPOnly cookies
 - Sanitize user input data
-- Set special HTTP headers (helmet package)
+- [Set special HTTP headers](https://blog.logrocket.com/using-helmet-node-js-secure-application/)
 
 4. Denial Of Service (DOS) attacks
 
@@ -203,7 +203,7 @@ TourSchema.virtual('durationsWeeks').get(function () {
 5. NOSQL Query Injection
 
 - Use mongoose for MongoDB (because of SchemaTypes)
-- Santize user input data
+- Sanitize user input data
 
 6. Other best practices and suggestions
 
