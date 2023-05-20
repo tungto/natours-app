@@ -6,11 +6,13 @@ import * as dotenv from 'dotenv';
 import { globalErrorHandler } from './controllers/errorController';
 import { AppError } from './utils/AppError';
 import userRouter from './routes/user.routes';
+import cookieParser from 'cookie-parser';
 dotenv.config();
 
 const app = express();
 
 app.use(cors());
+app.use(cookieParser());
 
 // log on development env
 if (process.env.NODE_ENV === 'development') {

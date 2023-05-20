@@ -169,3 +169,58 @@ TourSchema.virtual('durationsWeeks').get(function () {
 6. Delete Me => set _active: false_
 
 - Only return active users when get all users
+
+7. To do
+
+- Implement rate limiting (express-rate-limit)
+- Implement maximum login attempts
+
+### Security Best Practices
+
+1. Compromised database
+
+- Strongly encrypt passwords with salt and hash (bcrypt)
+- Strongly encrypt password reset tokens (SHA 256)
+
+2. Brute Force Attacks
+
+- Use _bcrypt_ to make login requests slow
+- Implement rate limiting (express-rate-limit)
+- Implement maximum login attempts
+
+3. Cross-site scripting (XSS) attacks
+
+- Store JWT in HTTPOnly cookies
+- Sanitize user input data
+- Set special HTTP headers (helmet package)
+
+4. Denial Of Service (DOS) attacks
+
+- Implement rate limiting (express-rate-limit)
+- Limit body payload (in body-parser)
+- Avoid evil regular expressions
+
+5. NOSQL Query Injection
+
+- Use mongoose for MongoDB (because of SchemaTypes)
+- Santize user input data
+
+6. Other best practices and suggestions
+
+- [JWT vs Session Cookies](https://viblo.asia/p/json-web-token-hay-session-cookies-dau-moi-la-chan-ai-Qbq5Q0oJlD8)
+- [JWT vs Cookie: Why Comparing the Two Is Misleading](https://jerrynsh.com/all-to-know-about-auth-and-cookies/)
+- [How to securely store JWTs in a cookie](https://blog.logrocket.com/jwt-authentication-best-practices/#store-jwts-securely)
+- [Use cookies securely](https://expressjs.com/en/advanced/best-practice-security.html#use-cookies-securely)
+
+- Always use HTTPS
+- Create random password reset tokens with expire dates
+- Deny access to JWT after password change
+- Don't commit sensitive config data to Git
+- Don't send error details to clients
+- Present Cross-site request forgery (csurf package)
+- Require re-authentication before high-value action
+- Implement a blacklist of untrusted JWT
+- Confirm user email address after first creating account
+- Keep user logged in with refresh token
+- Implement two factor authentication
+- Prevent parameter pollution causing Uncaught Exceptions

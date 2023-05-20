@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Request, Response, CookieOptions } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import User, { IUserDocument } from '../models/userSchema';
 import { AppError } from '../utils/AppError';
@@ -20,14 +20,20 @@ const signToken = (id: string) => {
 const createSendToken = (user: IUserDocument, statusCode: number, res: Response) => {
   const token = signToken(user._id);
 
+  const cookieOptions = {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    expires: new Date(Date.now() + +process.env.JWT_COOKIE_EXPIRES_IN! * 24 * 60 * 60 * 1000), // * Need convert expire date to milliseconds
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production', // marks the cookie to to be use with HTTPS only
+  };
+
   // remove password from response
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   //@ts-expect-error
   user.password = undefined;
 
-  res.status(statusCode).json({
-    status: 'created',
-    token,
+  res.cookie('jwt', token, cookieOptions).status(statusCode).json({
+    status: 'Logged in successfully 😊 👌',
     data: {
       user,
     },
@@ -45,6 +51,7 @@ export const signUp = catchAsync(async (req: Request, res: Response) => {
     passwordConfirm: req.body.password,
     passwordChangedAt: req.body.passwordChangedAt,
     role: req.body.role,
+    active: req.body.active,
   });
 
   createSendToken(newUser as IUserDocument, 201, res);
@@ -86,10 +93,10 @@ export const protectRoute = catchAsync(
     console.log('PROTECT ROUTE 👏');
 
     //1. Get token ad check of it's there
-    let token = '';
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      token = req.headers?.authorization?.split(' ')[1] || '';
-    }
+    const token = req.cookies.jwt;
+    // if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    //   token = req.headers?.authorization?.split(' ')[1] || '';
+    // }
 
     if (!token) {
       next(new AppError('You are not logged in. Please login to get access', 401));
