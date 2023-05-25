@@ -26,6 +26,9 @@
     "@types/morgan": "^1.9.4",
     "@types/node": "^18.15.11",
     "@types/validator": "^13.7.14",
+    "@types/cookie-parser": "^1.4.3",
+    "@types/hpp": "^0.2.2",
+    "@types/nodemailer": "^6.4.7",
     "@typescript-eslint/eslint-plugin": "^5.57.1",
     "@typescript-eslint/parser": "^5.57.1",
     "concurrently": "^8.0.1",
@@ -38,8 +41,6 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "@types/cookie-parser": "^1.4.3",
-    "@types/nodemailer": "^6.4.7",
     "bcrypt": "^5.1.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
@@ -48,6 +49,7 @@
     "express-mongo-sanitize": "^2.2.0",
     "express-rate-limit": "^6.7.0",
     "helmet": "^7.0.0",
+    "hpp": "^0.2.3",
     "husky": "^8.0.3",
     "jsonwebtoken": "^9.0.0",
     "mongodb": "^5.2.0",

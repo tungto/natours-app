@@ -101,15 +101,18 @@ TourSchema.virtual('durationsWeeks').get(function () {
 
 ### Protecting Routes
 
-- Get token and check if it's there
-- Verify the token
-  - Error Handling
-    - Expire token - handleJsonWebTokenError
-    - Invalid token - handleJsonWebTokenError
-- Check is user is still exists
-- Check if the token issued after user change password
-  - Add timestamp on changePasswordAfter
-  - Compare token iat with change password time added above
+1. Get token and check if it's there
+2. Verify the token
+
+- Error Handling
+  - Expire token - handleJsonWebTokenError
+  - Invalid token - handleJsonWebTokenError
+
+3.  Check is user is still exists
+4.  Check if the token issued after user change password
+
+- Add timestamp on changePasswordAfter
+- Compare token iat with change password time added above
 
 ### Roles and Permissions
 
@@ -191,7 +194,7 @@ TourSchema.virtual('durationsWeeks').get(function () {
 3. Cross-site scripting (XSS) attacks
 
 - Store JWT in HTTPOnly cookies
-- Sanitize user input data
+- [Sanitize user input data](https://viblo.asia/p/blog211-validating-and-sanitizing-user-input-in-nodejs-express-m2vJPxYlJeK)
 - [Set special HTTP headers](https://blog.logrocket.com/using-helmet-node-js-secure-application/)
 
 4. Denial Of Service (DOS) attacks
@@ -203,14 +206,16 @@ TourSchema.virtual('durationsWeeks').get(function () {
 5. NOSQL Query Injection
 
 - Use mongoose for MongoDB (because of SchemaTypes)
-- Sanitize user input data
+- [Sanitize user input data](https://viblo.asia/p/blog211-validating-and-sanitizing-user-input-in-nodejs-express-m2vJPxYlJeK)
 
 6. Other best practices and suggestions
 
+- [CS 253 Web Security](https://web.stanford.edu/class/cs253/)
 - [JWT vs Session Cookies](https://viblo.asia/p/json-web-token-hay-session-cookies-dau-moi-la-chan-ai-Qbq5Q0oJlD8)
 - [JWT vs Cookie: Why Comparing the Two Is Misleading](https://jerrynsh.com/all-to-know-about-auth-and-cookies/)
 - [How to securely store JWTs in a cookie](https://blog.logrocket.com/jwt-authentication-best-practices/#store-jwts-securely)
 - [Use cookies securely](https://expressjs.com/en/advanced/best-practice-security.html#use-cookies-securely)
+- [NodeJS Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Nodejs_Security_Cheat_Sheet.html)
 
 - Always use HTTPS
 - Create random password reset tokens with expire dates
@@ -223,4 +228,4 @@ TourSchema.virtual('durationsWeeks').get(function () {
 - Confirm user email address after first creating account
 - Keep user logged in with refresh token
 - Implement two factor authentication
-- Prevent parameter pollution causing Uncaught Exceptions
+- [Prevent parameter pollution](https://securityintelligence.com/posts/how-to-prevent-http-parameter-pollution/) [causing Uncaught Exceptions](https://levelup.gitconnected.com/prevent-parameter-pollution-in-node-js-f0794b4650d2)

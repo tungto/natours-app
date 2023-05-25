@@ -10,6 +10,7 @@ import cookieParser from 'cookie-parser';
 import { rateLimit } from 'express-rate-limit';
 import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
+import hpp from 'hpp';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const xss = require('xss-clean');
 dotenv.config();
@@ -18,6 +19,7 @@ const app = express();
 
 app.use(cors());
 app.use(cookieParser());
+
 // Security HTTP headers
 app.use(helmet());
 
@@ -38,6 +40,22 @@ app.use(mongoSanitize());
 // Data sanitization against XSS
 app.use(xss());
 
+// prevent http parameter pollution
+// *make sure the body is parsed beforehand
+app.use(
+  //  todo refactor
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsQuantity',
+      'ratingsAverage',
+      'maxGroupSize',
+      'difficulty',
+      'price',
+    ],
+  }),
+);
+
 // Test Middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
   req.requestTime = new Date().toISOString();
@@ -47,7 +65,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 // Limit requests from same API
 const apiLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1h
-  max: 2,
+  max: 100,
   message: 'To many request from this IP, please try again in an hour!',
 });
 app.use('/api', apiLimiter);
