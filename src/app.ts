@@ -11,6 +11,7 @@ import { rateLimit } from 'express-rate-limit';
 import helmet from 'helmet';
 import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
+import reviewRouter from './routes/review.routes';
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const xss = require('xss-clean');
 dotenv.config();
@@ -73,6 +74,7 @@ app.use('/api', apiLimiter);
 //3.ROUTES
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
+app.use('/api/v1/reviews', reviewRouter);
 
 app.all('*', (req, res, next) => {
   next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));

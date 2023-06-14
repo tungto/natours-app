@@ -1,12 +1,14 @@
 import { Document } from 'mongodb';
 import mongoose, { Schema } from 'mongoose';
 import slugify from 'slugify';
+// import User from './userSchema';
 // import validator from 'validator';
 
 export interface ITour extends Document {
   name: string;
   price: number;
   start: number;
+  guides: unknown[];
   [key: string]: unknown;
 }
 
@@ -94,6 +96,36 @@ const TourSchema: Schema = new Schema<ITour>(
       type: Boolean,
       default: false,
     },
+    startLocation: {
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinate: [Number],
+      address: String,
+      description: String,
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinate: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+    // guides: Array, -- embedding
+    guides: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
 
   /**
@@ -126,7 +158,13 @@ TourSchema.pre('save', function (next) {
 
 //! IF WE HAVE MORE THAN 1 MIDDLE,
 //! SHOULD CALL NEXT() ON EACH, If not it will stuck
-TourSchema.pre('save', (next) => {
+TourSchema.pre('save', async function (next) {
+  // const guidesPromises = this.guides.map(async (guideID: string) => {
+  //   return User.findById(guideID);
+  // });
+
+  // this.guides = await Promise.all(guidesPromises);
+
   next();
 });
 
@@ -136,6 +174,15 @@ TourSchema.pre('find', function () {
   // ! If we use .findById(), .findOne() => will not work
 
   this.find({ secretTour: { $ne: true } });
+});
+
+// POPULATING GUIDES FIELD
+TourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+  });
+  next();
 });
 
 // * SOLUTION

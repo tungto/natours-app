@@ -229,3 +229,16 @@ TourSchema.virtual('durationsWeeks').get(function () {
 - Keep user logged in with refresh token
 - Implement two factor authentication
 - [Prevent parameter pollution](https://securityintelligence.com/posts/how-to-prevent-http-parameter-pollution/) [causing Uncaught Exceptions](https://levelup.gitconnected.com/prevent-parameter-pollution-in-node-js-f0794b4650d2)
+
+# DATA MODELING
+
+- [Data Model Design](https://www.mongodb.com/docs/manual/core/data-model-design/#std-label-data-modeling-referencing)
+- [Populating data](https://viblo.asia/p/tim-hieu-ve-populate-trong-mongoogse-GrLZDvpE5k0)
+
+## Different Types of Relationships between data
+
+## Referencing/ Normalization vs Embedding/ Denormalization
+
+## Embedding or referencing other document?
+
+## Types of referencing
