@@ -1,6 +1,9 @@
 # Natours App
 
+[MakeReddit](https://makeschool.org/mediabook/oa/tutorials/makereddit/00-get-started/)
 [How to Setup a TypeScript + Node.js Project](https://gist.github.com/silver-xu/1dcceaa14c4f0253d9637d4811948437)
+[Articles for the New JS Dev](https://gist.github.com/zcaceres/77fc1f6605d3e34785c416288886f8c0)
+[Source](https://github.com/jonasschmedtmann/complete-node-bootcamp/tree/master)
 
 # MVC architecture
 

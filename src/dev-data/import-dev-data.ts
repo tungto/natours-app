@@ -2,12 +2,12 @@ import mongoose, { ConnectOptions } from 'mongoose';
 import * as fs from 'fs';
 import * as dotenv from 'dotenv';
 import Tour from '../models/tourSchema';
+import Review from '../models/reviewSchema';
+import User from '../models/userSchema';
 // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
 dotenv.config();
 
 const DB = process.env.DATABASE?.replace('<PASSWORD>', process.env.DATABASE_PASSWORD as string);
-console.log(process.env.DATABASE);
-console.log(DB);
 
 mongoose.connect(
   DB as string,
@@ -28,9 +28,11 @@ mongoose.connection.once('open', () => {
 //  read json file
 const importData = async () => {
   try {
-    const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours-simple.json`, 'utf8'));
+    const users = JSON.parse(fs.readFileSync(`${__dirname}/users.json`, 'utf8'));
+    const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`, 'utf8'));
+    const reviews = JSON.parse(fs.readFileSync(`${__dirname}/reviews.json`, 'utf8'));
 
-    await Tour.create(tours);
+    await Promise.all([User.create(users), Tour.create(tours), Review.create(reviews)]);
 
     console.log('Data successfully loaded!');
   } catch (error) {
@@ -42,8 +44,9 @@ const importData = async () => {
 
 const removeData = async () => {
   try {
-    await Tour.deleteMany();
+    await Promise.all([User.deleteMany(), Tour.deleteMany(), Review.deleteMany()]);
     console.log('Data successfully deleted');
+    process.exit();
   } catch (error) {
     console.log('Failed to removed data', error);
   }

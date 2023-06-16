@@ -9,23 +9,20 @@ userRouter.route('/login').post(authController.login);
 userRouter.route('/forgotPassword').post(authController.forgotPassword);
 userRouter.route('/resetPassword/:token').patch(authController.resetPassword);
 
-userRouter
-  .route('/updatePassword')
-  .patch(authController.protectRoute, authController.updatePassword);
+// Cause Middleware run in sequence, we can do sth like this
+// Protect all the routes come after this route
+userRouter.use(authController.protectRoute);
+
+userRouter.route('/updatePassword').patch(authController.updatePassword);
 
 // ME
-userRouter
-  .route('/me')
-  .get(authController.protectRoute, userController.getMe, userController.getUser);
-userRouter.route('/updateMe').patch(authController.protectRoute, userController.updateMe);
-userRouter.route('/deleteMe').patch(authController.protectRoute, userController.deleteMe);
+userRouter.route('/me').get(userController.getMe, userController.getUser);
+userRouter.route('/updateMe').patch(userController.updateMe);
+userRouter.route('/deleteMe').patch(userController.deleteMe);
 
+userRouter.use(authController.restrictTo('admin'));
 // USER
 userRouter.route('/').get(userController.getAllUsers).post(userController.createUser);
-
-userRouter
-  .route('/:id')
-  .get(authController.protectRoute, userController.getUser)
-  .delete(userController.deleteUser);
+userRouter.route('/:id').get(userController.getUser).delete(userController.deleteUser);
 
 export default userRouter;

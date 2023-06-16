@@ -15,20 +15,33 @@ const tourRouter = express.Router();
  * exec aliasTopTours before getAllTours
  */
 tourRouter.route('/top-5-cheap').get(tourController.aliasTopTours, tourController.getAllTours);
-
 tourRouter.route('/tours-stats').get(tourController.getTourStats);
 
-tourRouter.route('/monthly-plan/:year').get(tourController.getMonthlyPlan);
+tourRouter
+  .route('/monthly-plan/:year')
+  .get(
+    authController.protectRoute,
+    authController.restrictTo('lead-guide', 'admin', 'guide'),
+    tourController.getMonthlyPlan,
+  );
 
 tourRouter
   .route('/')
   .get(authController.protectRoute, tourController.getAllTours)
-  .post(tourController.createTour);
+  .post(
+    authController.protectRoute,
+    authController.restrictTo('lead-guide', 'admin'),
+    tourController.createTour,
+  );
 
 tourRouter
   .route('/:id')
   .get(tourController.getTour)
-  .patch(tourController.updateTour)
+  .patch(
+    authController.protectRoute,
+    authController.restrictTo('admin', 'lead-guide'),
+    tourController.updateTour,
+  )
   .delete(
     authController.protectRoute,
     authController.restrictTo('admin', 'lead-guide'),

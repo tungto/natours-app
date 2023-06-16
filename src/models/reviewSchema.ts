@@ -19,8 +19,8 @@ const ReviewSchema = new Schema({
   review: {
     type: String,
     required: [true, 'Review should contain at least 50 character'],
-    minLength: [50, 'Review should contains at least 50 character'],
-    maxLength: [100, 'Review should contains max 100 character'],
+    minLength: [10, 'Review should contains at least 50 character'],
+    maxLength: [1000, 'Review should contains max 100 character'],
   },
   rating: {
     type: Number,
