@@ -37,11 +37,12 @@ ReviewSchema.pre('save', function (next) {
 ReviewSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'user',
-    select: 'name photo',
-  }).populate({
-    path: 'tour',
-    select: 'name',
+    select: 'name role',
   });
+  //   .populate({
+  //   path: 'tour',
+  //   select: 'name',
+  // });
 
   next();
 });

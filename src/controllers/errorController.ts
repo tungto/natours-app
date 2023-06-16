@@ -28,6 +28,7 @@ const handleDuplicateError = (err: MongoServerError) => {
 const handleValidationError = (err: MongoServerError) => {
   // TODO fixed type
   const errors = Object.values(err.errors)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .map((el: any) => el.message)
     .join(' .');
 

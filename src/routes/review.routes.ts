@@ -2,7 +2,8 @@ import express from 'express';
 import * as reviewController from '../controllers/reviewController';
 import * as authController from '../controllers/authController';
 
-const reviewRouter = express.Router();
+// * to keep parent req.params, need to add {mergeParams: true}
+const reviewRouter = express.Router({ mergeParams: true });
 
 reviewRouter
   .route('/')
@@ -10,6 +11,7 @@ reviewRouter
   .post(
     authController.protectRoute,
     authController.restrictTo('user'),
+    reviewController.setTourUserIds,
     reviewController.createReview,
   );
 

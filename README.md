@@ -234,6 +234,8 @@ TourSchema.virtual('durationsWeeks').get(function () {
 
 - [Data Model Design](https://www.mongodb.com/docs/manual/core/data-model-design/#std-label-data-modeling-referencing)
 - [Populating data](https://viblo.asia/p/tim-hieu-ve-populate-trong-mongoogse-GrLZDvpE5k0)
+- [Populating Virtual](https://mongoosejs.com/docs/tutorials/virtuals.html#populate)
+- [Factory Functions and the Module Pattern](https://www.theodinproject.com/lessons/node-path-javascript-factory-functions-and-the-module-pattern)
 
 ## Different Types of Relationships between data
 

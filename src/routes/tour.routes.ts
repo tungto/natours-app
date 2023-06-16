@@ -1,6 +1,7 @@
 import express from 'express';
 import * as tourController from './../controllers/tourController';
 import * as authController from '../controllers/authController';
+import reviewRouter from './review.routes';
 
 /**
  * Router can use as middleware and for routing
@@ -33,5 +34,11 @@ tourRouter
     authController.restrictTo('admin', 'lead-guide'),
     tourController.deleteTour,
   );
+
+/**
+ * Nested route
+ * https://gist.github.com/zcaceres/f38b208a492e4dcd45f487638eff716c
+ */
+tourRouter.use('/:tourId/reviews', reviewRouter);
 
 export default tourRouter;

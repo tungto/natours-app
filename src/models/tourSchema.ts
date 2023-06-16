@@ -148,6 +148,20 @@ TourSchema.virtual('durationsWeeks').get(function () {
   return Math.round(this.duration / 7);
 });
 
+// Virtual Populate
+TourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
+  // justOne: true,
+});
+
+// TourSchema.virtual('users', {
+//   ref: 'User',
+//   foreignField: 'user', // field to refer in Review document
+//   localField: '_id',
+// });
+
 // *Document middleware: runs before .save() and .create()
 TourSchema.pre('save', function (next) {
   // * THIS point to current DOCUMENT that being process
@@ -159,12 +173,6 @@ TourSchema.pre('save', function (next) {
 //! IF WE HAVE MORE THAN 1 MIDDLE,
 //! SHOULD CALL NEXT() ON EACH, If not it will stuck
 TourSchema.pre('save', async function (next) {
-  // const guidesPromises = this.guides.map(async (guideID: string) => {
-  //   return User.findById(guideID);
-  // });
-
-  // this.guides = await Promise.all(guidesPromises);
-
   next();
 });
 
@@ -180,8 +188,9 @@ TourSchema.pre('find', function () {
 TourSchema.pre(/^find/, function (next) {
   this.populate({
     path: 'guides',
-    select: '-__v -passwordChangedAt',
+    select: '-__v -passwordChangedAt -role',
   });
+
   next();
 });
 
@@ -207,6 +216,7 @@ TourSchema.pre('aggregate', function (next) {
       secretTour: { $ne: true },
     },
   });
+
   next();
 });
 
