@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { NextFunction, Request, Response } from 'express';
 import jwt, { JwtPayload } from 'jsonwebtoken';
-import User, { IUserDocument } from '../models/userSchema';
+import User, { IUserDocument } from '../models/userModel';
 import { AppError } from '../utils/AppError';
 import { catchAsync } from '../utils/catchAsync';
 import { sendEmail } from '../utils/email';

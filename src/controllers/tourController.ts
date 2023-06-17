@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from 'express';
-import Tour from '../models/tourSchema';
+import Tour from '../models/tourModel';
 import { catchAsync } from '../utils/catchAsync';
 import * as factory from './handlerFactory';
 

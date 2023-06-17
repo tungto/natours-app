@@ -247,3 +247,5 @@ TourSchema.virtual('durationsWeeks').get(function () {
 ## Embedding or referencing other document?
 
 ## Types of referencing
+
+## [Indexes](https://www.mongodb.com/docs/manual/indexes/)

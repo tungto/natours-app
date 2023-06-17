@@ -27,7 +27,7 @@ tourRouter
 
 tourRouter
   .route('/')
-  .get(authController.protectRoute, tourController.getAllTours)
+  .get(tourController.getAllTours)
   .post(
     authController.protectRoute,
     authController.restrictTo('lead-guide', 'admin'),

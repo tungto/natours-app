@@ -1,4 +1,4 @@
-import Tour from '../models/tourSchema';
+import Tour from '../models/tourModel';
 
 export interface ReqQuery {
   sort: string;

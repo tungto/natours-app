@@ -1,5 +1,5 @@
 import { NextFunction, Response } from 'express';
-import Review from '../models/reviewSchema';
+import Review from '../models/reviewModel';
 import { IGetUserAuthInfoRequest } from './authController';
 import * as factory from './handlerFactory';
 

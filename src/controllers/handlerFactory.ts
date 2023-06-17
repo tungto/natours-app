@@ -101,8 +101,12 @@ export const getAll = (Model: mongoose.Model<any>) =>
     let filter = {};
     if (req.params.tourId) filter = { tour: req.params.tourId };
 
-    const features = new APIFeatures(Model.find(filter), req.query as unknown as ReqQuery);
-    const doc = await features.filter().sort().limitFields().paginate().query;
+    const features = new APIFeatures(Model.find(filter), req.query as unknown as ReqQuery)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+    const doc = await features.query.explain();
     console.log(`GET ${Model} DOCUMENT`);
 
     res.status(200).json({

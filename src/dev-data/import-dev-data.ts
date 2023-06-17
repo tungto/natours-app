@@ -1,9 +1,9 @@
 import mongoose, { ConnectOptions } from 'mongoose';
 import * as fs from 'fs';
 import * as dotenv from 'dotenv';
-import Tour from '../models/tourSchema';
-import Review from '../models/reviewSchema';
-import User from '../models/userSchema';
+import Tour from '../models/tourModel';
+import Review from '../models/reviewModel';
+import User from '../models/userModel';
 // see https://github.com/motdotla/dotenv#how-do-i-use-dotenv-with-import
 dotenv.config();
 
