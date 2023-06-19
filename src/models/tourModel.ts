@@ -1,8 +1,6 @@
 import { Document } from 'mongodb';
 import mongoose, { Schema } from 'mongoose';
 import slugify from 'slugify';
-// import User from './userSchema';
-// import validator from 'validator';
 
 export interface ITour extends Document {
   name: string;
@@ -46,6 +44,7 @@ const TourSchema: Schema = new Schema<ITour>(
       default: 4.6,
       max: [5, 'Rating must be below 5'],
       min: [1, 'Rating must be above 1'],
+      set: (val: number) => Math.round(val * 10) / 10,
     },
     ratingsQuantity: {
       type: Number,
@@ -143,6 +142,19 @@ const TourSchema: Schema = new Schema<ITour>(
   },
 );
 
+// Single field indexes
+// TourSchema.index({
+//   price: 1,
+// });
+
+// Compound indexes
+TourSchema.index({
+  price: 1,
+  ratingsAverage: 1,
+});
+
+TourSchema.index({ slug: 1 });
+
 TourSchema.virtual('durationsWeeks').get(function () {
   // ! do not use arrow function here, THIS will be undefined
   return Math.round(this.duration / 7);
@@ -155,12 +167,6 @@ TourSchema.virtual('reviews', {
   localField: '_id',
   // justOne: true,
 });
-
-// TourSchema.virtual('users', {
-//   ref: 'User',
-//   foreignField: 'user', // field to refer in Review document
-//   localField: '_id',
-// });
 
 // *Document middleware: runs before .save() and .create()
 TourSchema.pre('save', function (next) {

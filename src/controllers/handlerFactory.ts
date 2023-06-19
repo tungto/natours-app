@@ -17,7 +17,6 @@ export const getOne = (Model: mongoose.Model<any>, popOptions?: PopulateOptions)
      * * we will handle the cast error on global handler,
      * this error is not same as not found id
      */
-    console.log(req.params);
     let query = Model.findById(req.params.id);
     if (popOptions) query = query.populate(popOptions);
 
@@ -46,7 +45,6 @@ export const getOne = (Model: mongoose.Model<any>, popOptions?: PopulateOptions)
 export const deleteOne = (Model: mongoose.Model<any>) =>
   catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const doc = await Model.findByIdAndDelete(req.params.id);
-    console.log(req);
     if (!doc) {
       next(new AppError(`No document found with that ID`, 404));
     }
@@ -106,8 +104,7 @@ export const getAll = (Model: mongoose.Model<any>) =>
       .sort()
       .limitFields()
       .paginate();
-    const doc = await features.query.explain();
-    console.log(`GET ${Model} DOCUMENT`);
+    const doc = await features.query; //.explain();
 
     res.status(200).json({
       status: 'success',

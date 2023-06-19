@@ -249,3 +249,8 @@ TourSchema.virtual('durationsWeeks').get(function () {
 ## Types of referencing
 
 ## [Indexes](https://www.mongodb.com/docs/manual/indexes/)
+
+- Mongoose auto create idex for unique fields
+- Prefer post to pre save to calculate data because the data already saved to database
+- findAndUpdate/ Delete equal two request findOne and update/ delete
+-
