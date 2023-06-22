@@ -253,4 +253,5 @@ TourSchema.virtual('durationsWeeks').get(function () {
 - Mongoose auto create idex for unique fields
 - Prefer post to pre save to calculate data because the data already saved to database
 - findAndUpdate/ Delete equal two request findOne and update/ delete
--
+
+## [Generating API documentation](https://learning.postman.com/docs/publishing-your-api/documenting-your-api/)

@@ -101,7 +101,7 @@ const TourSchema: Schema = new Schema<ITour>(
         default: 'Point',
         enum: ['Point'],
       },
-      coordinate: [Number],
+      coordinates: [Number],
       address: String,
       description: String,
     },
@@ -112,7 +112,7 @@ const TourSchema: Schema = new Schema<ITour>(
           default: 'Point',
           enum: ['Point'],
         },
-        coordinate: [Number],
+        coordinates: [Number],
         address: String,
         description: String,
         day: Number,
@@ -142,17 +142,13 @@ const TourSchema: Schema = new Schema<ITour>(
   },
 );
 
-// Single field indexes
-// TourSchema.index({
-//   price: 1,
-// });
-
+TourSchema.index({ startLocation: '2dsphere' });
 // Compound indexes
 TourSchema.index({
   price: 1,
   ratingsAverage: 1,
 });
-
+// Single Field indexes
 TourSchema.index({ slug: 1 });
 
 TourSchema.virtual('durationsWeeks').get(function () {
@@ -215,13 +211,19 @@ TourSchema.post(/^find/, function (docs, next) {
 });
 
 // AGGREGATION MIDDLEWARE
+// * If $geoNear is the first operator in pipeline,
+// * skip this cause geoNear will not work
 TourSchema.pre('aggregate', function (next) {
-  this.pipeline().unshift({
-    $match: {
-      price: { $gte: 4.7 },
-      secretTour: { $ne: true },
-    },
-  });
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
+  if (!this.pipeline()[0]['$geoNear']) {
+    this.pipeline().unshift({
+      $match: {
+        price: { $gte: 4.7 },
+        secretTour: { $ne: true },
+      },
+    });
+  }
 
   next();
 });

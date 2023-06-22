@@ -17,6 +17,14 @@ const tourRouter = express.Router();
 tourRouter.route('/top-5-cheap').get(tourController.aliasTopTours, tourController.getAllTours);
 tourRouter.route('/tours-stats').get(tourController.getTourStats);
 
+// /tours/distance?distance=223&center=-40,45&unit=mi
+// /tours-distance/223/center/-40,45/unit/mi neat and clean than route above
+tourRouter
+  .route('/tours-within/:distance/center/:latlng/unit/:unit')
+  .get(tourController.getToursWithin);
+
+tourRouter.route('/distances/:latlng/unit/:unit').get(tourController.getTourDistance);
+
 tourRouter
   .route('/monthly-plan/:year')
   .get(
